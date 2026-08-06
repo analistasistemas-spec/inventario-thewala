@@ -56,8 +56,8 @@ inventario-thewala/
    Spring Boot y sus dependencias a `C:\Users\thewala\.m2\` (el "almacén" de Maven).
 3. Abre `InventarioApplication.java` y dale al **triángulo verde** junto a `main`.
 4. En la consola verás arrancar Spring Boot; la línea clave es:
-   `Tomcat started on port 8090`.
-5. Abre el navegador en **http://localhost:8090** → debes ver la tarjeta de bienvenida.
+   `Tomcat started on port 9090`.
+5. Abre el navegador en **http://localhost:9090** → debes ver la tarjeta de bienvenida.
 
 **Qué acabas de aprender:** un proyecto Spring Boot es un programa Java normal con un
 `main()`, que levanta un servidor web embebido (Tomcat). No hay que instalar ningún
@@ -107,7 +107,7 @@ public class HolaControlador {
 </html>
 ```
 
-4. Reinicia la app y visita **http://localhost:8090/hola**.
+4. Reinicia la app y visita **http://localhost:9090/hola**.
 
 **Qué aprendes aquí:** el ciclo completo petición → controlador → modelo → plantilla.
 Todo lo demás del proyecto es este mismo ciclo repetido con más datos.

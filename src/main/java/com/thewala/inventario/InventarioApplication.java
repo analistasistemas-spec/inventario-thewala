@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Punto de entrada de la aplicacion.
  * Al ejecutar main(), Spring Boot levanta un servidor web (Tomcat)
- * y deja la aplicacion escuchando en http://localhost:8090
+ * y deja la aplicacion escuchando en http://localhost:9090
  */
 @SpringBootApplication
 public class InventarioApplication {
