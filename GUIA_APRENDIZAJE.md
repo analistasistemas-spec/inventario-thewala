@@ -45,9 +45,35 @@ inventario-thewala/
         └── templates/                   ← plantillas Thymeleaf (HTML dinámico)
 ```
 
+**¿Qué es cada cosa que ves en IntelliJ?** (panel Project, de arriba a abajo):
+
+| Elemento | Qué es | ¿Lo tocas? |
+|---|---|---|
+| `.idea` | Carpeta privada de IntelliJ (sus preferencias) | ❌ Nunca; si se borra, se regenera |
+| `src` | ⭐ **TU código**: Java en `main/java`, config y HTML en `main/resources` | ✅ Aquí vives |
+| `target` | Resultado de compilar (los `.class`). Desechable, se regenera | ❌ Nunca editar |
+| `.gitignore` | Lista de lo que git NO debe versionar (`target/`, `.idea/`) | Casi nunca |
+| `GUIA_APRENDIZAJE.md` | Esta guía. Documentación, no afecta al programa | 📖 Leer |
+| `pom.xml` | ⭐ La "receta": identidad del proyecto + librerías (`<dependency>`) | ✅ Al agregar librerías |
+| External Libraries | Vista de las librerías que Maven descargó a `C:\Users\thewala\.m2\` | 📖 Solo mirar |
+| Scratches and Consoles | Borradores sueltos de IntelliJ | Ignorar por ahora |
+
+Regla mental: *¿necesito una librería nueva? → `pom.xml`. ¿voy a programar? → `src`.*
+
+**Configuración clave — el puerto.** En `application.properties` está la línea:
+
+```properties
+server.port=9090
+```
+
+Ese archivo es el centro de configuración de toda app Spring Boot (puerto, base de datos,
+todo). Usamos 9090 porque el 8080 (el default de Spring) y el 8090 ya estaban ocupados
+en esta máquina. Si algún día ves `Port XXXX was already in use`: otro programa usa ese
+puerto → cambia esta línea y reinicia.
+
 ---
 
-## Paso 1 — Abrir y ejecutar el proyecto (¡hoy!)
+## Paso 1 — Abrir y ejecutar el proyecto ✅ (completado el 06-ago-2026)
 
 1. Abre **IntelliJ IDEA** → `File → Open` → selecciona la carpeta
    `C:\Users\thewala\inventario-thewala` (la carpeta, no un archivo).
@@ -64,6 +90,17 @@ inventario-thewala/
 servidor aparte.
 
 > Para detener la app: cuadrado rojo en IntelliJ. Para reiniciarla: el triángulo otra vez.
+
+**Errores que ya vivimos (y su lección):**
+
+- **Navegador dice "ERR_CONNECTION_REFUSED / la página rechazó la conexión"** → la app
+  NO está corriendo. La aplicación solo existe mientras la consola de IntelliJ esté viva
+  (cuadrado rojo encendido). Primera pregunta siempre: *¿está corriendo mi app?*
+- **Consola dice `Port 9090 was already in use`** → otro programa usa el puerto;
+  cambiar `server.port` en `application.properties` y reiniciar.
+- **El proceso arranca y muere solo (`Process finished with exit code 1`)** → hubo un
+  error al iniciar; buscar en la consola la primera línea que diga `Caused by:` — ahí
+  está la causa real.
 
 ---
 
@@ -107,7 +144,14 @@ public class HolaControlador {
 </html>
 ```
 
-4. Reinicia la app y visita **http://localhost:9090/hola**.
+4. Reinicia la app (cuadrado rojo → triángulo verde) y visita **http://localhost:9090/hola**.
+
+**Trucos de IntelliJ mientras escribes:**
+
+- Si `@Controller` (o cualquier cosa) queda subrayado en rojo: cursor encima →
+  **Alt+Enter → Import class** (elige el de `org.springframework...`).
+- Si al probar da **error 404**: o la carpeta no se llama exactamente `templates`,
+  o el `return "hola"` no coincide con el nombre del archivo `hola.html`.
 
 **Qué aprendes aquí:** el ciclo completo petición → controlador → modelo → plantilla.
 Todo lo demás del proyecto es este mismo ciclo repetido con más datos.
