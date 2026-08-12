@@ -2,10 +2,10 @@ package com.thewala.inventario;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+import java.util.List;
 
 @Controller
 public class EquipoControlador {
@@ -19,8 +19,15 @@ public class EquipoControlador {
     }
 
     @GetMapping("/equipos")
-    public String listar(Model model) {
-        model.addAttribute("equipos", repositorio.findAll());
+    public String listar(@RequestParam(required = false) String texto, Model model) {
+        List<Equipo> equipos;
+        if (texto == null || texto.isBlank()) {
+            equipos = repositorio.findAll();
+        } else {
+            equipos = repositorio.buscar(texto);
+        }
+        model.addAttribute("equipos", equipos);
+        model.addAttribute("texto", texto);
         return "equipos";
     }
     @GetMapping("/equipos/nuevo")
@@ -30,7 +37,10 @@ public class EquipoControlador {
     }
 
     @PostMapping("/equipos")
-    public String guardar(@ModelAttribute Equipo equipo) {
+    public String guardar(@Valid @ModelAttribute Equipo equipo, BindingResult resultado) {
+        if (resultado.hasErrors()) {
+            return "equipo_formulario";
+        }
         repositorio.save(equipo);
         return "redirect:/equipos";
     }

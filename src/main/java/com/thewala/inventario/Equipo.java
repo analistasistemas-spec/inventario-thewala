@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 public class Equipo {
@@ -12,10 +13,17 @@ public class Equipo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "La placa es obligatoria")
     private String placa;
+
+    @NotBlank(message = "La marca es obligatoria")
     private String marca;
+
     private String modelo;
+
+    @NotBlank(message = "La sede es obligatoria")
     private String sede;
+
     private String responsable;
 
     public String getPlaca() {

@@ -12,18 +12,22 @@
         <form th:action="@{/equipos}" th:object="${equipo}" method="post">
             <input type="hidden" th:field="*{id}">
             <div class="mb-3">
+                <div class="text-danger" th:errors="*{placa}"></div>
                 <label class="form-label">Placa</label>
                 <input type="text" class="form-control" th:field="*{placa}">
             </div>
             <div class="mb-3">
+                <div class="text-danger" th:errors="*{marca}"></div>
                 <label class="form-label">Marca</label>
                 <input type="text" class="form-control" th:field="*{marca}">
             </div>
             <div class="mb-3">
+                <div class="text-danger" th:errors="*{modelo}"></div>
                 <label class="form-label">Modelo</label>
                 <input type="text" class="form-control" th:field="*{modelo}">
             </div>
             <div class="mb-3">
+                <div class="text-danger" th:errors="*{sede}"></div>
                 <label class="form-label">Sede</label>
                 <input type="text" class="form-control" th:field="*{sede}">
             </div>
