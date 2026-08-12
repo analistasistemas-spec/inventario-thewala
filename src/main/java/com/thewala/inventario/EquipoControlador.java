@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
@@ -29,6 +30,19 @@ public class EquipoControlador {
     @PostMapping("/equipos")
     public String guardar(@ModelAttribute Equipo equipo) {
         repositorio.save(equipo);
+        return "redirect:/equipos";
+    }
+
+    @GetMapping("/equipos/{id}/editar")
+    public String mostrarEdicion(@PathVariable Long id, Model model) {
+        Equipo equipo = repositorio.findById(id).orElseThrow();
+        model.addAttribute("equipo", equipo);
+        return "equipo_formulario";
+    }
+
+    @PostMapping("/equipos/{id}/eliminar")
+    public String eliminar(@PathVariable Long id) {
+        repositorio.deleteById(id);
         return "redirect:/equipos";
     }
 }
