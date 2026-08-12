@@ -56,12 +56,12 @@ public class EquipoControlador {
         return "equipo_detalle";
     }
 
-    @PostMapping("/equipos/{id}/perifericos")
-    public String agregarPeriferico(@PathVariable Long id, @ModelAttribute Periferico periferico) {
-        Equipo equipo = repositorio.findById(id).orElseThrow();
+    @PostMapping("/equipos/{equipoId}/perifericos")
+    public String agregarPeriferico(@PathVariable Long equipoId, @ModelAttribute Periferico periferico) {
+        Equipo equipo = repositorio.findById(equipoId).orElseThrow();
         periferico.setEquipo(equipo);
         perifericoRepositorio.save(periferico);
-        return "redirect:/equipos/" + id;
+        return "redirect:/equipos/" + equipoId;
     }
 
     @PostMapping("/perifericos/{id}/eliminar")
