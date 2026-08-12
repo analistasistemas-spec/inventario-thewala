@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Detalle equipo</title></head>
+<body>
+<h1 th:text="'Equipo ' + ${equipo.placa}">placa</h1>
+<p>
+    <span th:text="${equipo.marca}"></span> —
+    <span th:text="${equipo.modelo}"></span> |
+    Sede: <span th:text="${equipo.sede}"></span> |
+    Responsable: <span th:text="${equipo.responsable}"></span>
+</p>
+
+<h2>Periféricos</h2>
+<table border="1">
+    <tr><th>Tipo</th><th>Marca</th><th>Serial</th><th></th></tr>
+    <tr th:each="periferico : ${perifericos}">
+        <td th:text="${periferico.tipo}"></td>
+        <td th:text="${periferico.marca}"></td>
+        <td th:text="${periferico.serial}"></td>
+        <td>
+            <form th:action="@{/perifericos/{id}/eliminar(id=${periferico.id})}" method="post">
+                <button type="submit">🗑️</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<h3>Agregar periférico</h3>
+<form th:action="@{/equipos/{id}/perifericos(id=${equipo.id})}" th:object="${nuevoPeriferico}" method="post">
+    <p>Tipo: <input type="text" th:field="*{tipo}" placeholder="Mouse, Teclado, Monitor..."></p>
+    <p>Marca: <input type="text" th:field="*{marca}"></p>
+    <p>Serial: <input type="text" th:field="*{serial}"></p>
+    <button type="submit">Guardar</button>
+</form>
+
+<p><a th:href="@{/equipos}">← Volver al listado</a></p>
+</body>
+</html>

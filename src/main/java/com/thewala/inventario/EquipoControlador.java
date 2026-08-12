@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class EquipoControlador {
 
     private final EquipoRepositorio repositorio;
+    private final PerifericoRepositorio perifericoRepositorio;
 
-    public EquipoControlador(EquipoRepositorio repositorio) {
+    public EquipoControlador(EquipoRepositorio repositorio, PerifericoRepositorio perifericoRepositorio) {
         this.repositorio = repositorio;
+        this.perifericoRepositorio = perifericoRepositorio;
     }
 
     @GetMapping("/equipos")
@@ -44,5 +46,29 @@ public class EquipoControlador {
     public String eliminar(@PathVariable Long id) {
         repositorio.deleteById(id);
         return "redirect:/equipos";
+    }
+    @GetMapping("/equipos/{id}")
+    public String detalle(@PathVariable Long id, Model model) {
+        Equipo equipo = repositorio.findById(id).orElseThrow();
+        model.addAttribute("equipo", equipo);
+        model.addAttribute("perifericos", perifericoRepositorio.findByEquipoId(id));
+        model.addAttribute("nuevoPeriferico", new Periferico());
+        return "equipo_detalle";
+    }
+
+    @PostMapping("/equipos/{id}/perifericos")
+    public String agregarPeriferico(@PathVariable Long id, @ModelAttribute Periferico periferico) {
+        Equipo equipo = repositorio.findById(id).orElseThrow();
+        periferico.setEquipo(equipo);
+        perifericoRepositorio.save(periferico);
+        return "redirect:/equipos/" + id;
+    }
+
+    @PostMapping("/perifericos/{id}/eliminar")
+    public String eliminarPeriferico(@PathVariable Long id) {
+        Periferico periferico = perifericoRepositorio.findById(id).orElseThrow();
+        Long equipoId = periferico.getEquipo().getId();
+        perifericoRepositorio.deleteById(id);
+        return "redirect:/equipos/" + equipoId;
     }
 }

@@ -9,7 +9,7 @@
         <th>Acciones</th>
     </tr>
     <tr th:each="equipo : ${equipos}">
-        <td th:text="${equipo.placa}"></td>
+        <td><a th:href="@{/equipos/{id}(id=${equipo.id})}" th:text="${equipo.placa}"></a></td>
         <td th:text="${equipo.marca}"></td>
         <td th:text="${equipo.modelo}"></td>
         <td th:text="${equipo.sede}"></td>
