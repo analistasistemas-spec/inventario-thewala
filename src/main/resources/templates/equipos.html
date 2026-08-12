@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Equipos</title></head>
+<body>
+<h1>Inventario de equipos — IPS The Wala</h1>
+<table border="1">
+    <tr>
+        <th>Placa</th><th>Marca</th><th>Modelo</th><th>Sede</th><th>Responsable</th>
+    </tr>
+    <tr th:each="equipo : ${equipos}">
+        <td th:text="${equipo.placa}"></td>
+        <td th:text="${equipo.marca}"></td>
+        <td th:text="${equipo.modelo}"></td>
+        <td th:text="${equipo.sede}"></td>
+        <td th:text="${equipo.responsable}"></td>
+    </tr>
+</table>
+</body>
+</html>
