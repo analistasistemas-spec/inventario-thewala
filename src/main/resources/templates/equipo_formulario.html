@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Nuevo equipo</title></head>
+<body>
+<h1>Registrar equipo</h1>
+<form th:action="@{/equipos}" th:object="${equipo}" method="post">
+    <p>Placa: <input type="text" th:field="*{placa}"></p>
+    <p>Marca: <input type="text" th:field="*{marca}"></p>
+    <p>Modelo: <input type="text" th:field="*{modelo}"></p>
+    <p>Sede: <input type="text" th:field="*{sede}"></p>
+    <p>Responsable: <input type="text" th:field="*{responsable}"></p>
+    <button type="submit">Guardar</button>
+</form>
+<p><a th:href="@{/equipos}">Volver al listado</a></p>
+</body>
+</html>
