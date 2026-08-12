@@ -1,5 +1,10 @@
 # Guía de aprendizaje — Inventario de PC y periféricos (IPS The Wala)
 
+> **🏆 GUÍA COMPLETADA el 12-ago-2026.** Los 10 pasos terminados: app Spring Boot con
+> CRUD de equipos, periféricos relacionados (@ManyToOne), validaciones, buscador general
+> (@Query JPQL), Bootstrap y login (Spring Security). Detalle de gotchas aprendidos en
+> los commits de git y en la memoria de Claude.
+
 Vas a construir una página web en **Java** para registrar los computadores y periféricos
 de la IPS, y en el camino vas a aprender las bases del desarrollo web con Java.
 
