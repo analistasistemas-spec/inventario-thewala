@@ -35,6 +35,30 @@
                 <label class="form-label">Responsable</label>
                 <input type="text" class="form-control" th:field="*{responsable}">
             </div>
+            <div class="mb-3">
+                <label class="form-label">Tipo</label>
+                <input type="text" class="form-control" th:field="*{tipo}" placeholder="ESCRITORIO, PORTATIL, TODO_EN_UNO, IMPRESORA">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Procesador</label>
+                <input type="text" class="form-control" th:field="*{procesador}" placeholder="Intel Core i5-10400, Ryzen 5 5600G...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">RAM (GB)</label>
+                <input type="number" class="form-control" th:field="*{ramGb}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Disco (GB)</label>
+                <input type="number" class="form-control" th:field="*{discoGb}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Estado</label>
+                <input type="text" class="form-control" th:field="*{estado}" placeholder="ACTIVO, MANTENIMIENTO, DADO_DE_BAJA">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Fecha de compra</label>
+                <input type="date" class="form-control" th:field="*{fechaCompra}">
+            </div>
             <button type="submit" class="btn btn-success">💾 Guardar</button>
             <a class="btn btn-secondary" th:href="@{/equipos}">Cancelar</a>
         </form>

@@ -32,6 +32,7 @@ public class Equipo {
     private Integer ramGb;
     private Integer discoGb;
     private String estado;
+
     private LocalDate fechaCompra;
 
 

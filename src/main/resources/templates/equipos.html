@@ -23,7 +23,7 @@
         <thead class="table-dark">
         <tr>
             <th>Placa</th><th>Marca</th><th>Modelo</th><th>Sede</th><th>Responsable</th>
-            <th>Acciones</th>
+            <th>Tipo</th><th>Estado</th><th>Acciones</th>
         </tr>
         </thead>
         <tbody>
@@ -33,12 +33,8 @@
             <td th:text="${equipo.modelo}"></td>
             <td th:text="${equipo.sede}"></td>
             <td th:text="${equipo.responsable}"></td>
-            <td th:list="${equipo.tipo}"></td>
-            <td th:text="${equipo.procesador}"></td>
-            <td th:text="${equipo.ram}"></td>
-            <td th:text="${equipo.disco}"></td>
-            <td th:list="${equipo.estado}"></td>
-            <td th:text="${equipo.fechadecompra}"></td>
+            <td th:text="${equipo.tipo}"></td>
+            <td th:text="${equipo.estado}"></td>
             <td>
                 <a class="btn btn-warning btn-sm" th:href="@{/equipos/{id}/editar(id=${equipo.id})}">✏️ Editar</a>
                 <form th:action="@{/equipos/{id}/eliminar(id=${equipo.id})}" method="post" style="display:inline">

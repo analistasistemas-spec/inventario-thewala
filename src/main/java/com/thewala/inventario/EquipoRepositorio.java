@@ -13,12 +13,7 @@ public interface EquipoRepositorio extends JpaRepository<Equipo, Long> {
            OR lower(e.marca) LIKE lower(concat('%', :texto, '%'))
            OR lower(e.modelo) LIKE lower(concat('%', :texto, '%'))
            OR lower(e.sede) LIKE lower(concat('%', :texto, '%'))
-           OR lower(e.responsable) LIKE lower(concat('%', :texto, '%'))
-           OR lower(e.tipo) LIKE lower(concat('%', :list, '%'))
-           OR lower(e.procesador) LIKE lower(concat('%', :text, '%'))
-           OR lower(e.ram) LIKE lower(concat('%', :text, '%'))
-           OR lower(e.disco) LIKE lower(concat('%', :text, '%'))
-           OR lower(e.estado) LIKE lower(concat('%', :list, '%'))                       
+           OR lower(e.responsable) LIKE lower(concat('%', :texto, '%'))               
         """)
     List<Equipo> buscar(@Param("texto") String texto);
 }
