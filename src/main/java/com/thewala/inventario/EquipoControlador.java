@@ -100,6 +100,16 @@ public class EquipoControlador {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(archivo);
     }
+    @GetMapping("/equipos/{id}/acta")
+    public ResponseEntity<byte[]> acta(@PathVariable Long id) throws Exception {
+        Equipo equipo = repositorio.findById(id).orElseThrow();
+        byte[] archivo = PdfExportador.generarActa(equipo, perifericoRepositorio.findByEquipoId(id));
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=acta_" + equipo.getPlaca() + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(archivo);
+    }
 
     @PostMapping("/equipos/{equipoId}/perifericos")
     public String agregarPeriferico(@PathVariable Long equipoId, @ModelAttribute Periferico periferico) {
