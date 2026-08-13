@@ -16,4 +16,12 @@ public interface EquipoRepositorio extends JpaRepository<Equipo, Long> {
            OR lower(e.responsable) LIKE lower(concat('%', :texto, '%'))               
         """)
     List<Equipo> buscar(@Param("texto") String texto);
+    @Query("SELECT e.sede, COUNT(e) FROM Equipo e GROUP BY e.sede ORDER BY e.sede")
+    List<Object[]> contarPorSede();
+
+    @Query("SELECT e.estado, COUNT(e) FROM Equipo e GROUP BY e.estado ORDER BY e.estado")
+    List<Object[]> contarPorEstado();
+
+    @Query("SELECT e.tipo, COUNT(e) FROM Equipo e GROUP BY e.tipo ORDER BY e.tipo")
+    List<Object[]> contarPorTipo();
 }
