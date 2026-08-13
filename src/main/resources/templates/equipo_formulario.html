@@ -29,7 +29,14 @@
             <div class="mb-3">
                 <div class="text-danger" th:errors="*{sede}"></div>
                 <label class="form-label">Sede</label>
-                <input type="text" class="form-control" th:field="*{sede}">
+                <select class="form-select" th:field="*{sede}">
+                    <option value="">-- Seleccione --</option>
+                    <option value="Ibagué">Ibagué</option>
+                    <option value="Chaparral">Chaparral</option>
+                    <option value="Ortega">Ortega</option>
+                    <option value="Natagaima">Natagaima</option>
+                    <option value="San Antonio">San Antonio</option>
+                </select>
             </div>
             <div class="mb-3">
                 <label class="form-label">Responsable</label>

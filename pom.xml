@@ -24,6 +24,12 @@
     </properties>
 
     <dependencies>
+        <!-- Apache POI: generar archivos Excel desde Java -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.4.0</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>

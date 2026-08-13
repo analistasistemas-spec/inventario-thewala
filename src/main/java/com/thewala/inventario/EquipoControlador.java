@@ -1,5 +1,8 @@
 package com.thewala.inventario;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +25,7 @@ public class EquipoControlador {
     public String listar(@RequestParam(required = false) String texto, Model model) {
         List<Equipo> equipos;
         if (texto == null || texto.isBlank()) {
-            equipos = repositorio.findAll();
+            equipos = repositorio.findAll(Sort.by("placa"));
         } else {
             equipos = repositorio.buscar(texto);
         }
@@ -64,6 +67,22 @@ public class EquipoControlador {
         model.addAttribute("perifericos", perifericoRepositorio.findByEquipoId(id));
         model.addAttribute("nuevoPeriferico", new Periferico());
         return "equipo_detalle";
+    }
+    @GetMapping("/equipos/excel")
+    public ResponseEntity<byte[]> exportarExcel(@RequestParam(required = false) String texto) throws Exception {
+        List<Equipo> equipos;
+        if (texto == null || texto.isBlank()) {
+            equipos = repositorio.findAll(Sort.by("placa"));
+        } else {
+            equipos = repositorio.buscar(texto);
+        }
+
+        byte[] archivo = ExcelExportador.generar(equipos);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=inventario_thewala.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(archivo);
     }
 
     @PostMapping("/equipos/{equipoId}/perifericos")
