@@ -109,7 +109,7 @@ servidor aparte.
 
 ---
 
-## Paso 2 — Tu primer controlador (lo escribes TÚ)
+## Paso 2 — Tu primer controlador ✅ (completado el 10-ago-2026)
 
 Vas a crear la página `/hola` escribiendo tu primera clase.
 
@@ -163,9 +163,13 @@ Todo lo demás del proyecto es este mismo ciclo repetido con más datos.
 
 ---
 
-## Paso 3 — Base de datos y la entidad `Equipo`
+## Paso 3 — Base de datos y la entidad `Equipo` ✅ (completado el 10-ago-2026)
 
-*(Este lo hacemos juntos cuando termines el Paso 2 — aquí va el resumen.)*
+*Nota de lo vivido: la BD se creó en la instancia local del puerto **5433** (la
+"postgresql-x64-17-inventarios", solo accesible desde esta máquina) porque la clave del
+postgres del 5432 no se conocía. Y ojo con DataGrip: mirar SIEMPRE a qué conexión
+apunta la consola antes de ejecutar SQL — la primera vez la BD se creó por accidente
+en el servidor de producción y hubo que borrarla.*
 
 1. Crear la base de datos en tu PostgreSQL local: `CREATE DATABASE inventario_thewala;`
 2. Agregar al `pom.xml` dos dependencias: `spring-boot-starter-data-jpa` y el driver
@@ -190,13 +194,244 @@ Equipo
 Con `spring.jpa.hibernate.ddl-auto=update`, **JPA crea la tabla sola** a partir de la
 clase — verás en DataGrip cómo aparece.
 
-## Paso 4 — Listar equipos (tabla HTML con `th:each`)
-## Paso 5 — Formulario para registrar un equipo (`th:object`, POST)
-## Paso 6 — Editar y eliminar (rutas con variable: `/equipos/{id}/editar`)
-## Paso 7 — Periféricos (relación @ManyToOne: un equipo tiene muchos periféricos)
-## Paso 8 — Validaciones (@NotBlank, placa única) y buscador por sede/estado
-## Paso 9 — Estilos con Bootstrap para que se vea profesional
-## Paso 10 — Extras: login sencillo (Spring Security), exportar a Excel, hoja de vida del equipo
+## Paso 4 — Listar equipos en la web ✅ (completado el 10-ago-2026)
+
+Aquí se conectó todo: PostgreSQL → Java → HTML. Tres piezas:
+
+**1. El repositorio** (`EquipoRepositorio.java`) — una interface que hereda de
+`JpaRepository<Equipo, Long>` (entidad + tipo de su id) y con eso regala `findAll()`,
+`save()`, `findById()`, `deleteById()`... Spring escribe el SQL.
+
+**2. El controlador** (`EquipoControlador.java`) — presenta la **inyección de
+dependencias**: se declara el repositorio como campo `final` y se pide en el
+constructor; Spring lo entrega solo.
+
+```java
+@Controller
+public class EquipoControlador {
+    private final EquipoRepositorio repositorio;
+
+    public EquipoControlador(EquipoRepositorio repositorio) {
+        this.repositorio = repositorio;
+    }
+
+    @GetMapping("/equipos")
+    public String listar(Model model) {
+        model.addAttribute("equipos", repositorio.findAll());
+        return "equipos";
+    }
+}
+```
+
+**3. La plantilla** (`equipos.html`) — la estrella es `th:each`, el "por cada":
+
+```html
+<tr th:each="equipo : ${equipos}">
+    <td th:text="${equipo.placa}"></td>
+    ...
+</tr>
+```
+
+⚠️ **Tropiezos que vivimos:**
+- **`eq` NO sirve como variable del th:each** — es palabra reservada de Thymeleaf (el
+  operador "equals", como `gt`, `lt`, `ge`, `le`). Produce el error críptico
+  `Iteration variable cannot be null`. Usar nombres largos: `equipo`.
+- Todo lo que use `${equipo...}` debe vivir **dentro** de la etiqueta que declara el
+  `th:each`; afuera de esa fila la variable no existe (`cannot be found on null`).
+- En stack traces largos, la causa real está en el **último `Caused by:`**.
+
+---
+
+## Paso 5 — Formulario para registrar equipos ✅ (completado el 10-ago-2026)
+
+Un formulario son **dos viajes**: GET trae la página con campos vacíos, POST envía lo
+escrito. Por eso son dos métodos:
+
+```java
+@GetMapping("/equipos/nuevo")
+public String mostrarFormulario(Model model) {
+    model.addAttribute("equipo", new Equipo());   // molde en blanco
+    return "equipo_formulario";
+}
+
+@PostMapping("/equipos")
+public String guardar(@ModelAttribute Equipo equipo) {
+    repositorio.save(equipo);          // el INSERT
+    return "redirect:/equipos";        // patrón redirect: guardar y volver al listado
+}
+```
+
+- **`@ModelAttribute`** — Spring arma el objeto Equipo con lo que el usuario escribió,
+  usando los setters (por eso existen los getters/setters).
+- En la plantilla: `th:object="${equipo}"` amarra el form al objeto y cada input usa
+  `th:field="*{placa}"` (el `*{...}` = "del objeto de este formulario").
+- **`redirect:`** en vez de plantilla = patrón POST-redirect-GET: guardas y rediriges,
+  así el F5 no reenvía el formulario.
+
+---
+
+## Paso 6 — Editar y eliminar (CRUD completo) ✅ (completado el 12-ago-2026)
+
+**Concepto clave:** el id viaja en la URL (`/equipos/4/editar`) y se captura con
+`@PathVariable`. Y `save()` es inteligente: objeto CON id → UPDATE; sin id → INSERT.
+
+```java
+@GetMapping("/equipos/{id}/editar")
+public String mostrarEdicion(@PathVariable Long id, Model model) {
+    Equipo equipo = repositorio.findById(id).orElseThrow();
+    model.addAttribute("equipo", equipo);
+    return "equipo_formulario";        // ¡reutiliza el formulario del Paso 5!
+}
+
+@PostMapping("/equipos/{id}/eliminar")
+public String eliminar(@PathVariable Long id) {
+    repositorio.deleteById(id);
+    return "redirect:/equipos";
+}
+```
+
+- El formulario compartido lleva `<input type="hidden" th:field="*{id}">` — el id viaja
+  escondido: si viene lleno, save() hace UPDATE; vacío, INSERT.
+- URLs con variable en Thymeleaf: `@{/equipos/{id}/editar(id=${equipo.id})}`.
+- **Regla de oro:** las acciones que CAMBIAN datos van por POST (mini-form con botón),
+  nunca como enlace GET — un enlace se puede disparar por accidente.
+- Para borrar archivos/clases en IntelliJ: clic derecho → Delete con **Safe delete**
+  (busca usos antes de borrar).
+
+---
+
+## Paso 7 — Periféricos: relación entre tablas ✅ (completado el 12-ago-2026)
+
+EL tema de las bases de datos: MUCHOS periféricos pertenecen a UN equipo.
+
+**1. La entidad** (`Periferico.java`): campos id, tipo, marca, serial y la estrella:
+
+```java
+@ManyToOne
+private Equipo equipo;    // Hibernate lo convierte en la columna equipo_id (FK)
+```
+
+**2. El repositorio** (`PerifericoRepositorio.java`) presenta las **derived queries**:
+Spring genera el SQL a partir del NOMBRE del método:
+
+```java
+List<Periferico> findByEquipoId(Long equipoId);   // = WHERE equipo_id = ?
+```
+
+**3. El controlador**: la hoja de vida `/equipos/{id}` (detalle + periféricos + form),
+agregar (`periferico.setEquipo(equipo)` ANTES de save — así se amarra), y eliminar
+volviendo al equipo dueño. La placa del listado se volvió enlace al detalle.
+
+⚠️ **Tropiezos que vivimos:**
+- Faltaron los getters/setters de `Periferico` → `cannot find symbol setEquipo` al
+  compilar. Sin getters no funciona ni el binding ni Thymeleaf.
+- **GOTCHA grande:** `@ModelAttribute` también rellena el objeto con las variables de
+  la URL que coincidan por nombre. La ruta `/equipos/{id}/perifericos` metía el id del
+  EQUIPO en `periferico.id` → JPA intentaba UPDATE de una fila inexistente
+  (`ObjectOptimisticLockingFailureException`). **Fix:** renombrar la variable de ruta a
+  `{equipoId}`. Regla: con @ModelAttribute, las path variables nunca deben llamarse
+  como campos de la entidad.
+
+---
+
+## Paso 8 — Validaciones y buscador general ✅ (completado el 12-ago-2026)
+
+**A. Validaciones** — dependencia `spring-boot-starter-validation` + anotar la entidad:
+
+```java
+@NotBlank(message = "La placa es obligatoria")
+private String placa;
+```
+
+Activarlas en el controlador (el `BindingResult` DEBE ir justo después del `@Valid`):
+
+```java
+public String guardar(@Valid @ModelAttribute Equipo equipo, BindingResult resultado) {
+    if (resultado.hasErrors()) {
+        return "equipo_formulario";    // vuelve al form sin guardar
+    }
+    ...
+```
+
+Y mostrar los mensajes bajo cada campo: `<div class="text-danger" th:errors="*{placa}"></div>`.
+
+**B. Buscador general** — cuando la condición es compleja, el nombre-de-método se vuelve
+eterno; para eso existe **`@Query` con JPQL** (como SQL, pero sobre CLASES, no tablas):
+
+```java
+@Query("""
+    SELECT e FROM Equipo e
+    WHERE lower(e.placa) LIKE lower(concat('%', :texto, '%'))
+       OR lower(e.marca) LIKE lower(concat('%', :texto, '%'))
+       OR lower(e.modelo) LIKE lower(concat('%', :texto, '%'))
+       OR lower(e.sede) LIKE lower(concat('%', :texto, '%'))
+       OR lower(e.responsable) LIKE lower(concat('%', :texto, '%'))
+    """)
+List<Equipo> buscar(@Param("texto") String texto);
+```
+
+En el controlador, el filtro llega como **`@RequestParam(required = false)`** (parámetro
+de consulta: `/equipos?texto=lenovo` — distinto del @PathVariable que es parte de la
+ruta). La cajita en la plantilla es un form **GET** cuyo `name="texto"` debe coincidir
+con el @RequestParam.
+
+Mapa mental: consulta simple → derived query; varias condiciones → @Query JPQL.
+
+⚠️ **Tropiezos que vivimos:** anotar campos = escribir la anotación SOBRE el campo
+existente (no pegar campos nuevos → "variable already defined"); los imports se escriben
+`import java.util.List;` exacto (mejor Alt+Enter); y tras tocar el pom.xml SIEMPRE
+recargar Maven — editar el pom es escribir el pedido, la recarga es ir a la tienda.
+
+---
+
+## Paso 9 — Estilo profesional con Bootstrap ✅ (completado el 12-ago-2026)
+
+Bootstrap = CSS hecho por profesionales que se usa poniendo **clases**. Una línea en el
+`<head>` de cada plantilla:
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+```
+
+Las clases que usamos: `container mt-4` (centra y da aire), `table table-striped
+table-bordered table-hover` + `<thead class="table-dark">` (tablas), `btn btn-primary /
+btn-success / btn-warning / btn-danger / btn-secondary` + `btn-sm` (botones),
+`form-label` + `form-control` + `mb-3` (formularios), `text-danger` (mensajes de error).
+
+Requiere internet (el CSS viene de un CDN).
+
+---
+
+## Paso 10 — Login con Spring Security ✅ (completado el 12-ago-2026)
+
+Sorprendentemente fácil en su versión básica:
+
+1. Dependencia `spring-boot-starter-security` (+ recarga de Maven).
+2. Con solo existir, protege TODA la app: login automático, usuario `user`, clave
+   generada en la consola en cada arranque.
+3. Usuario fijo en `application.properties`:
+
+```properties
+spring.security.user.name=admin
+spring.security.user.password=LaClaveElegida
+```
+
+4. Salir: visitar `/logout`.
+
+Nivel siguiente (opcional): varios usuarios con roles guardados en la base de datos —
+el mismo mundo que Keycloak en el Reporteador, en miniatura.
+
+---
+
+## Fase 2 — Caminos abiertos (por hacer)
+
+- **Campos completos de Equipo**: tipo, procesador, ramGb, discoGb, estado, fechaCompra
+  — y ver a `ddl-auto=update` agregar las columnas solo.
+- **Listas desplegables** para sede y tipo (evitar "Ibague" vs "Ibagué" — texto libre
+  genera datos inconsistentes).
+- **Exportar a Excel** el inventario.
+- **Subirlo a GitHub** y/o desplegarlo en un servidor de la IPS.
+- **Usuarios con roles** (consulta vs administrador) desde la base de datos.
 
 ---
 
