@@ -1,9 +1,12 @@
 # Guía de aprendizaje — Inventario de PC y periféricos (IPS The Wala)
 
-> **🏆 GUÍA COMPLETADA el 12-ago-2026.** Los 10 pasos terminados: app Spring Boot con
-> CRUD de equipos, periféricos relacionados (@ManyToOne), validaciones, buscador general
-> (@Query JPQL), Bootstrap y login (Spring Security). Detalle de gotchas aprendidos en
-> los commits de git y en la memoria de Claude.
+> **🏆 GUÍA BASE COMPLETADA el 12-ago-2026** (10 pasos): app Spring Boot con CRUD de
+> equipos, periféricos relacionados (@ManyToOne), validaciones, buscador general
+> (@Query JPQL), Bootstrap y login (Spring Security).
+>
+> **🚀 FASE 2 COMPLETADA el 13-ago-2026** (ver al final): ficha completa del equipo,
+> listas desplegables, exportación a Excel y PDF, dashboard con totales y menú de
+> navegación con fragmentos.
 
 Vas a construir una página web en **Java** para registrar los computadores y periféricos
 de la IPS, y en el camino vas a aprender las bases del desarrollo web con Java.
@@ -423,15 +426,127 @@ el mismo mundo que Keycloak en el Reporteador, en miniatura.
 
 ---
 
-## Fase 2 — Caminos abiertos (por hacer)
+## FASE 2 — La aplicación de verdad (13-ago-2026)
 
-- **Campos completos de Equipo**: tipo, procesador, ramGb, discoGb, estado, fechaCompra
-  — y ver a `ddl-auto=update` agregar las columnas solo.
-- **Listas desplegables** para sede y tipo (evitar "Ibague" vs "Ibagué" — texto libre
-  genera datos inconsistentes).
-- **Exportar a Excel** el inventario.
-- **Subirlo a GitHub** y/o desplegarlo en un servidor de la IPS.
+Terminada la guía base, el inventario se convirtió en una herramienta usable.
+
+### 2.1 — Ficha completa del equipo ✅
+
+Campos nuevos en la entidad: `tipo`, `procesador`, `ramGb` (Integer), `discoGb`
+(Integer), `estado` y `fechaCompra` (**LocalDate**, import de `java.time`).
+
+Al reiniciar, la consola mostró `Hibernate: alter table equipo add column ...` —
+**`ddl-auto=update` agrega columnas a una tabla existente SIN borrar los datos**. Y
+`ramGb` se volvió `ram_gb`: Hibernate traduce camelCase a snake_case solo.
+
+En el formulario aparecen dos tipos de input nuevos: `type="number"` (solo dígitos) y
+`type="date"` (calendario del navegador; Spring lo convierte solo a LocalDate).
+
+⚠️ **Tropiezo:** escribir `th:list` en vez de `th:text` → la celda queda vacía **sin dar
+error**. Un atributo `th:` mal escrito se ignora en silencio. Cuando algo "no aparece"
+pero tampoco falla, revisa la ortografía del atributo.
+
+### 2.2 — Listas desplegables ✅
+
+Cambiar `<input type="text">` por `<select class="form-select" th:field="*{sede}">` con
+sus `<option>`. El mismo `th:field` funciona igual y además **marca sola** la opción
+guardada al editar.
+
+Por qué importa: con texto libre aparecieron "Ibagué" y "Ibague" en la misma base —
+datos inconsistentes que rompen filtros y reportes. Con listas, todos escriben igual.
+
+Bonus: `repositorio.findAll(Sort.by("placa"))` para que el listado no cambie de orden
+al editar (import `Sort` de `org.springframework.data.domain`).
+
+### 2.3 — Exportar a Excel ✅ (Apache POI)
+
+Dependencia `org.apache.poi:poi-ooxml:5.4.0` — lleva `<version>` porque no es de Spring
+(las de Spring heredan la versión del "padre").
+
+Clase `ExcelExportador`: crea `Workbook` → `Sheet` → filas y celdas. Diseño aplicado:
+título combinado (`addMergedRegion`), encabezado verde institucional con letra blanca,
+bordes, filas alternas, `createFreezePane(0,2)` (inmovilizar), `setAutoFilter` (las
+flechitas de filtro) y fecha con `setDataFormat("dd/MM/yyyy")`.
+
+Colores: `IndexedColors` es una paleta fija de 56 colores; para un color exacto se usa
+`XSSFColor` con RGB y un **cast**: `((XSSFCellStyle) estilo).setFillForegroundColor(...)`.
+
+El endpoint es distinto a todos los anteriores — devuelve un **archivo**, no una plantilla:
+
+```java
+@GetMapping("/equipos/excel")
+public ResponseEntity<byte[]> exportarExcel(@RequestParam(required = false) String texto) {
+    ...
+    return ResponseEntity.ok()
+            .header("Content-Disposition", "attachment; filename=inventario_thewala.xlsx")
+            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .body(archivo);
+}
+```
+
+`Content-Disposition: attachment` = "no lo muestres, descárgalo". Y como recibe el mismo
+`texto` del buscador, **exporta respetando el filtro activo**.
+
+⚠️ **Tropiezo (concepto de ÁMBITO):** las variables de color se declararon como campos de
+la clase y se usaban desde un método `static` → *"non-static variable cannot be
+referenced from a static context"*. Una variable declarada dentro de un método existe
+solo ahí; una de clase pertenece a cada objeto; un método `static` no puede ver las de
+objeto. Solución: declararlas dentro del método.
+
+### 2.4 — Exportar a PDF ✅ (OpenPDF)
+
+Dependencia `com.github.librepdf:openpdf:1.3.30`. Clase `PdfExportador` y endpoint
+`/equipos/pdf` **calcado** del de Excel (cambian la clase, el nombre del archivo y el
+`contentType`).
+
+Diferencia conceptual: un PDF no tiene filas y columnas como Excel — se construye
+agregando **elementos** al documento (`Paragraph`, `PdfPTable`). Se usó A4 horizontal
+(`PageSize.A4.rotate()`) por la cantidad de columnas y `setHeaderRows(1)` para que el
+encabezado se repita en cada página.
+
+### 2.5 — Dashboard de inicio ✅
+
+Consultas de **agregación** en el repositorio:
+
+```java
+@Query("SELECT e.sede, COUNT(e) FROM Equipo e GROUP BY e.sede ORDER BY e.sede")
+List<Object[]> contarPorSede();
+```
+
+Cuando la consulta no devuelve entidades completas sino columnas sueltas, el resultado
+llega como **`List<Object[]>`**: `fila[0]` = sede, `fila[1]` = conteo. En la plantilla se
+leen como `${fila[0]}`, y el operador *elvis* `?: 'Sin definir'` cubre los nulos.
+`count()` viene gratis de JpaRepository.
+
+⚠️ **Concepto clave que costó un 404:** hubo que borrar `static/index.html` para que la
+raíz `/` llegara al controlador. Y las plantillas **no se abren por su nombre de
+archivo**:
+
+| Carpeta | Cómo se accede |
+|---|---|
+| `resources/static` | por nombre de archivo: `/index.html`, `/logo.png` |
+| `resources/templates` | SOLO a través de un controlador: `/` → InicioControlador → inicio.html |
+
+### 2.6 — Menú de navegación con fragmentos ✅
+
+`templates/fragmentos.html` con `<nav th:fragment="menu" ...>` y en cada plantilla:
+
+```html
+<div th:replace="~{fragmentos :: menu}"></div>
+```
+
+El menú se escribe **una vez** y aparece en todas las pantallas; se cambia en un solo
+lugar. Es el principio **DRY** (*Don't Repeat Yourself*), uno de los pilares del oficio.
+
+---
+
+## Fase 3 — Caminos abiertos (por hacer)
+
+- **Subirlo a GitHub** — primer repositorio Java propio (ojo: elegir la cuenta correcta).
+- **Acta de entrega en PDF** por equipo, para cuando se asigna un PC a una persona.
 - **Usuarios con roles** (consulta vs administrador) desde la base de datos.
+- **Historial de movimientos**: quién tuvo el equipo antes, traslados entre sedes.
+- **Desplegarlo** en un servidor de la IPS para que lo use todo el mundo.
 
 ---
 

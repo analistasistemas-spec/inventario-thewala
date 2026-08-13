@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<nav th:fragment="menu" class="navbar navbar-expand navbar-dark bg-success mb-4">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">🏥 Inventario The Wala</a>
+        <div class="navbar-nav">
+            <a class="nav-link" th:href="@{/}">Inicio</a>
+            <a class="nav-link" th:href="@{/equipos}">Equipos</a>
+            <a class="nav-link" th:href="@{/equipos/nuevo}">Registrar</a>
+        </div>
+        <form class="ms-auto" th:action="@{/logout}" method="post">
+            <button class="btn btn-outline-light btn-sm" type="submit">Salir</button>
+        </form>
+    </div>
+</nav>
+
+</body>
+</html>
