@@ -84,6 +84,22 @@ public class EquipoControlador {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(archivo);
     }
+    @GetMapping("/equipos/pdf")
+    public ResponseEntity<byte[]> exportarPdf(@RequestParam(required = false) String texto) throws Exception {
+        List<Equipo> equipos;
+        if (texto == null || texto.isBlank()) {
+            equipos = repositorio.findAll(Sort.by("placa"));
+        } else {
+            equipos = repositorio.buscar(texto);
+        }
+
+        byte[] archivo = PdfExportador.generar(equipos);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=inventario_thewala.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(archivo);
+    }
 
     @PostMapping("/equipos/{equipoId}/perifericos")
     public String agregarPeriferico(@PathVariable Long equipoId, @ModelAttribute Periferico periferico) {
