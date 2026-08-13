@@ -25,6 +25,7 @@
             <td th:text="${periferico.tipo}"></td>
             <td th:text="${periferico.marca}"></td>
             <td th:text="${periferico.serial}"></td>
+
             <td>
                 <form th:action="@{/perifericos/{id}/eliminar(id=${periferico.id})}" method="post">
                     <button class="btn btn-danger btn-sm" type="submit">🗑️</button>

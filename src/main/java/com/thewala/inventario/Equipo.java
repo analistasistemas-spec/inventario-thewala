@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDate;
 
 @Entity
 public class Equipo {
@@ -25,6 +26,15 @@ public class Equipo {
     private String sede;
 
     private String responsable;
+
+    private String tipo;
+    private String procesador;
+    private Integer ramGb;
+    private Integer discoGb;
+    private String estado;
+    private LocalDate fechaCompra;
+
+
 
     public String getPlaca() {
         return placa;
@@ -73,4 +83,53 @@ public class Equipo {
     public void setId(Long id) {
         this.id = id;
     }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public String getProcesador() {
+        return procesador;
+    }
+
+    public void setProcesador(String procesador) {
+        this.procesador = procesador;
+    }
+
+    public Integer getRamGb() {
+        return ramGb;
+    }
+
+    public void setRamGb(Integer ramGb) {
+        this.ramGb = ramGb;
+    }
+
+    public Integer getDiscoGb() {
+        return discoGb;
+    }
+
+    public void setDiscoGb(Integer discoGb) {
+        this.discoGb = discoGb;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public LocalDate getFechaCompra() {
+        return fechaCompra;
+    }
+
+    public void setFechaCompra(LocalDate fechaCompra) {
+        this.fechaCompra = fechaCompra;
+    }
+
 }
