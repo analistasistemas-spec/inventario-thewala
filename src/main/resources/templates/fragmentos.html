@@ -6,7 +6,7 @@
 <nav th:fragment="menu" class="navbar navbar-expand navbar-dark bg-success mb-4">
     <div class="container">
         <a class="navbar-brand" th:href="@{/}">🏥 Inventario The Wala</a>
-        <div class="navbar-nav">
+        <div class="navbar-nav"> <a sec:authorize="hasRole('ADMIN')" class="nav-link" th:href="@{/usuarios}">Usuarios</a>
             <a class="nav-link" th:href="@{/}">Inicio</a>
             <a class="nav-link" th:href="@{/equipos}">Equipos</a>
             <a class="nav-link" th:href="@{/equipos/nuevo}">Registrar</a>

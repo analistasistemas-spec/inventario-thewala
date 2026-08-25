@@ -22,7 +22,7 @@ public class SeguridadConfig {
     @Bean
     public SecurityFilterChain reglas(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(permisos -> permisos
+                .authorizeHttpRequests(permisos -> permisos.requestMatchers("/usuarios/**").hasRole("ADMIN")
                         .requestMatchers("/logout").authenticated()
                         .requestMatchers("/equipos/nuevo", "/equipos/*/editar").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/**").hasRole("ADMIN")
