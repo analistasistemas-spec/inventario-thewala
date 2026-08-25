@@ -43,6 +43,55 @@
         </tbody>
     </table>
 
+    <h2 class="mt-4">Historial de movimientos</h2>
+    <table class="table table-striped table-bordered table-hover">
+        <thead class="table-dark">
+        <tr><th>Fecha</th><th>De sede</th><th>A sede</th><th>Responsable anterior</th><th>Responsable nuevo</th><th>Observación</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="movimiento : ${movimientos}">
+            <td th:text="${movimiento.fecha}"></td>
+            <td th:text="${movimiento.sedeOrigen}"></td>
+            <td th:text="${movimiento.sedeDestino}"></td>
+            <td th:text="${movimiento.responsableAnterior}"></td>
+            <td th:text="${movimiento.responsableNuevo}"></td>
+            <td th:text="${movimiento.observacion}"></td>
+        </tr>
+        <tr th:if="${movimientos.isEmpty()}">
+            <td colspan="6" class="text-secondary">Sin movimientos registrados</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3 class="mt-4">Registrar traslado</h3>
+    <div style="max-width: 500px">
+        <form th:action="@{/equipos/{id}/traslados(id=${equipo.id})}" th:object="${nuevoMovimiento}" method="post">
+            <div class="mb-3">
+                <label class="form-label">Fecha</label>
+                <input type="date" class="form-control" th:field="*{fecha}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nueva sede</label>
+                <select class="form-select" th:field="*{sedeDestino}">
+                    <option value="Ibagué">Ibagué</option>
+                    <option value="Chaparral">Chaparral</option>
+                    <option value="Ortega">Ortega</option>
+                    <option value="Natagaima">Natagaima</option>
+                    <option value="San Antonio">San Antonio</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nuevo responsable</label>
+                <input type="text" class="form-control" th:field="*{responsableNuevo}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Observación</label>
+                <input type="text" class="form-control" th:field="*{observacion}" placeholder="Motivo del traslado">
+            </div>
+            <button type="submit" class="btn btn-success">💾 Registrar traslado</button>
+        </form>
+    </div>
+
     <h3 class="mt-4">Agregar periférico</h3>
     <div style="max-width: 500px">
         <form th:action="@{/equipos/{id}/perifericos(id=${equipo.id})}" th:object="${nuevoPeriferico}" method="post">

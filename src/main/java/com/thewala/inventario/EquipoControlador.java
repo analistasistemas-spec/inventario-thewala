@@ -8,6 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -15,10 +17,14 @@ public class EquipoControlador {
 
     private final EquipoRepositorio repositorio;
     private final PerifericoRepositorio perifericoRepositorio;
+    private final MovimientoRepositorio movimientoRepositorio;
 
-    public EquipoControlador(EquipoRepositorio repositorio, PerifericoRepositorio perifericoRepositorio) {
+    public EquipoControlador(EquipoRepositorio repositorio,
+                             PerifericoRepositorio perifericoRepositorio,
+                             MovimientoRepositorio movimientoRepositorio) {
         this.repositorio = repositorio;
         this.perifericoRepositorio = perifericoRepositorio;
+        this.movimientoRepositorio = movimientoRepositorio;
     }
 
     @GetMapping("/equipos")
@@ -48,6 +54,28 @@ public class EquipoControlador {
         return "redirect:/equipos";
     }
 
+    @PostMapping("/equipos/{equipoId}/traslados")
+    public String registrarTraslado(@PathVariable Long equipoId,
+                                    @ModelAttribute Movimiento movimiento) {
+        Equipo equipo = repositorio.findById(equipoId).orElseThrow();
+
+        // 1. Guardamos de donde venia
+        movimiento.setEquipo(equipo);
+        movimiento.setSedeOrigen(equipo.getSede());
+        movimiento.setResponsableAnterior(equipo.getResponsable());
+        if (movimiento.getFecha() == null) {
+            movimiento.setFecha(LocalDate.now());
+        }
+        movimientoRepositorio.save(movimiento);
+
+        // 2. Actualizamos el equipo con los datos nuevos
+        equipo.setSede(movimiento.getSedeDestino());
+        equipo.setResponsable(movimiento.getResponsableNuevo());
+        repositorio.save(equipo);
+
+        return "redirect:/equipos/" + equipoId;
+    }
+
     @GetMapping("/equipos/{id}/editar")
     public String mostrarEdicion(@PathVariable Long id, Model model) {
         Equipo equipo = repositorio.findById(id).orElseThrow();
@@ -66,6 +94,8 @@ public class EquipoControlador {
         model.addAttribute("equipo", equipo);
         model.addAttribute("perifericos", perifericoRepositorio.findByEquipoId(id));
         model.addAttribute("nuevoPeriferico", new Periferico());
+        model.addAttribute("movimientos", movimientoRepositorio.findByEquipoIdOrderByFechaDesc(id));
+        model.addAttribute("nuevoMovimiento", new Movimiento());
         return "equipo_detalle";
     }
     @GetMapping("/equipos/excel")
