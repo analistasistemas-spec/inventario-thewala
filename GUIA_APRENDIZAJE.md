@@ -16,6 +16,9 @@
 >
 > **🔑 FASE 5 COMPLETADA el 25-ago-2026:** usuarios con roles (administrador y consulta),
 > claves cifradas con BCrypt y permisos por URL.
+>
+> **🗄️ FASE 6 COMPLETADA el 25-ago-2026:** usuarios guardados en la base de datos y
+> pantalla para administrarlos desde la web.
 
 Vas a construir una página web en **Java** para registrar los computadores y periféricos
 de la IPS, y en el camino vas a aprender las bases del desarrollo web con Java.
@@ -793,10 +796,82 @@ el contenido visible va después del `>`.
 
 ---
 
-## Fase 6 — Caminos abiertos (por hacer)
+## FASE 6 — Usuarios en la base de datos (25-ago-2026)
 
-- **Usuarios en la base de datos** (entidad Usuario + `UserDetailsService` propio), para
-  crear y quitar usuarios sin tocar el código.
+### 6.1 — El login sale de una tabla ✅
+
+Entidad `Usuario` (usuario único, clave cifrada, rol, activo) + su repositorio con
+`Optional<Usuario> findByUsuario(String usuario)`. **`Optional`** representa "puede que
+haya resultado o puede que no", y obliga a decidir qué pasa si no existe — así se evita
+el error más famoso de Java, el `NullPointerException`.
+
+La pieza que conecta todo es una clase que **implementa una interfaz de Spring Security**:
+
+```java
+@Service
+public class UsuarioDetallesService implements UserDetailsService {
+
+    @Override
+    public UserDetails loadUserByUsername(String nombre) throws UsernameNotFoundException {
+        Usuario usuario = repositorio.findByUsuario(nombre)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + nombre));
+
+        return User.withUsername(usuario.getUsuario())
+                .password(usuario.getClave())
+                .roles(usuario.getRol())
+                .disabled(!usuario.isActivo())
+                .build();
+    }
+}
+```
+
+Spring Security define el contrato ("dame un método que reciba un nombre y devuelva sus
+datos"); tú escribes **cómo** obtenerlos. Él se encarga del resto: comparar la clave
+cifrada, crear la sesión, aplicar los roles. Basta con la anotación `@Service` para que lo
+encuentre.
+
+Los usuarios iniciales se crean con un **`CommandLineRunner`** en `InventarioApplication`
+— código que Spring ejecuta una vez al terminar de arrancar. El `if (count() == 0)` hace
+que solo siembre la primera vez.
+
+⚠️ **Tropiezo:** quedó el `@Bean` viejo de usuarios en memoria junto al nuevo
+`UserDetailsService`. Con **dos** proveedores de usuarios, Spring Security no sabe cuál
+usar y **no configura ninguno**: todo login falla con "Invalid credentials" aunque las
+claves estén perfectas. Solución: dejar uno solo.
+
+### 6.2 — Pantalla de administración de usuarios ✅
+
+`UsuarioControlador` con listar, crear, activar/desactivar y eliminar; regla
+`.requestMatchers("/usuarios/**").hasRole("ADMIN")` en la configuración de seguridad, y
+enlace en el menú con `sec:authorize`. Dos detalles:
+
+- `codificador.encode(...)` antes de guardar: la clave llega en texto desde el formulario
+  y se guarda cifrada. Ese es el único instante en que existe en claro.
+- `usuario.setActivo(!usuario.isActivo())`: el `!` invierte el valor, así un solo botón
+  sirve para activar y desactivar.
+
+En la plantilla aparece **`th:unless`**, el opuesto de `th:if`; juntos pintan la etiqueta
+verde "Activo" o la gris "Inactivo".
+
+⚠️ **Tropiezo grande (400 Bad Request) — regla de oro de los formularios:** el objeto del
+formulario se llamaba `usuario` y uno de sus campos también `usuario`. Cuando un parámetro
+coincide con el nombre del objeto, Spring no lo trata como un campo sino como "**este es
+el objeto**" e intenta convertir el texto en la entidad buscándola por id (lo hace el
+convertidor de Spring Data) → falla → 400. Solución: renombrar el atributo del modelo
+(`@ModelAttribute("formularioUsuario")` y `th:object="${formularioUsuario}"`).
+**El nombre del objeto del formulario nunca debe coincidir con el de un campo.** Por eso
+`Equipo` nunca dio problemas: sus campos son placa, marca, sede… ninguno se llama `equipo`.
+
+Cómo se diagnosticó: enviando el formulario campo por campo hasta ver cuál disparaba el
+400. Aislar la variable es la técnica, no adivinar.
+
+---
+
+## Fase 7 — Caminos abiertos (por hacer)
+
+- **Validaciones de negocio en usuarios**: impedir que un administrador se elimine a sí
+  mismo o borre al último ADMIN (hoy nada lo impide y podrías quedarte fuera).
+- **Cambiar la clave** de un usuario existente desde la pantalla.
 - **Desplegarlo** en un servidor de la IPS para que lo use todo el mundo.
 - Detalle pendiente: ponerle las tildes a los textos fijos del acta de entrega.
 
