@@ -695,6 +695,35 @@ cumple la condición — se usó para la fila "Sin movimientos registrados":
 Y se repitió el cuidado ya conocido: la variable de ruta se llama `{equipoId}`, nunca
 `{id}`, para que `@ModelAttribute` no la meta en el `id` del movimiento.
 
+### 4.2 — Editar periféricos (repaso de todo lo aprendido) ✅
+
+Sin crear pantallas nuevas: **la misma página de detalle sirve para agregar y para
+editar**. El truco es un parámetro opcional en la URL:
+
+```java
+@GetMapping("/equipos/{id}")
+public String detalle(@PathVariable Long id, @RequestParam(required = false) Long editar, Model model) {
+    ...
+    Periferico formulario = (editar == null)
+            ? new Periferico()
+            : perifericoRepositorio.findById(editar).orElseThrow();
+    model.addAttribute("nuevoPeriferico", formulario);
+```
+
+`/equipos/1` muestra el formulario vacío; `/equipos/1?editar=3` lo muestra cargado. En la
+plantilla, el enlace ✏️ de cada fila pasa **dos parámetros**: `(id=..., editar=...)` — el
+primero rellena el hueco `{id}` de la ruta y el segundo se agrega como `?editar=3`.
+
+El controlador de guardar **no se tocó**: `save()` decide entre INSERT y UPDATE según
+venga o no el id. Un método, dos comportamientos.
+
+⚠️ **Tropiezo (y la lección de fondo):** el `<input type="hidden" th:field="*{id}">` quedó
+pegado dentro de una celda de la tabla en vez de dentro del formulario → el id no viajaba
+→ cada "edición" creaba un periférico duplicado. El asterisco de `*{id}` significa "del
+objeto de ESTE formulario", y ese objeto lo define el `th:object` del `<form>`: fuera del
+formulario no existe. Es el mismo principio del `th:each` (`${equipo}` solo vive dentro
+de su `<tr>`): **en Thymeleaf, cada cosa existe solo dentro del elemento que la declara**.
+
 ---
 
 ## Fase 5 — Caminos abiertos (por hacer)
