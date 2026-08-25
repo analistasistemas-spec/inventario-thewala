@@ -89,13 +89,21 @@ public class EquipoControlador {
         return "redirect:/equipos";
     }
     @GetMapping("/equipos/{id}")
-    public String detalle(@PathVariable Long id, Model model) {
+    public String detalle(@PathVariable Long id,
+                          @RequestParam(required = false) Long editar,
+                          Model model) {
         Equipo equipo = repositorio.findById(id).orElseThrow();
         model.addAttribute("equipo", equipo);
         model.addAttribute("perifericos", perifericoRepositorio.findByEquipoId(id));
-        model.addAttribute("nuevoPeriferico", new Periferico());
         model.addAttribute("movimientos", movimientoRepositorio.findByEquipoIdOrderByFechaDesc(id));
         model.addAttribute("nuevoMovimiento", new Movimiento());
+
+        // Si viene ?editar=5 cargamos ese periferico en el formulario; si no, uno vacio
+        Periferico formulario = (editar == null)
+                ? new Periferico()
+                : perifericoRepositorio.findById(editar).orElseThrow();
+        model.addAttribute("nuevoPeriferico", formulario);
+
         return "equipo_detalle";
     }
     @GetMapping("/equipos/excel")

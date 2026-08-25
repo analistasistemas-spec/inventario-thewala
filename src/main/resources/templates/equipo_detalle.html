@@ -26,16 +26,16 @@
     <h2 class="mt-4">Periféricos</h2>
     <table class="table table-striped table-bordered table-hover">
         <thead class="table-dark">
-        <tr><th>Tipo</th><th>Marca</th><th>Serial</th><th style="width:80px"></th></tr>
+        <tr><th>Tipo</th><th>Marca</th><th>Serial</th><th style="width:140px">Acciones</th></tr>
         </thead>
         <tbody>
         <tr th:each="periferico : ${perifericos}">
             <td th:text="${periferico.tipo}"></td>
             <td th:text="${periferico.marca}"></td>
             <td th:text="${periferico.serial}"></td>
-
             <td>
-                <form th:action="@{/perifericos/{id}/eliminar(id=${periferico.id})}" method="post">
+                <a class="btn btn-warning btn-sm" th:href="@{/equipos/{id}(id=${equipo.id}, editar=${periferico.id})}">✏️</a>
+                <form th:action="@{/perifericos/{id}/eliminar(id=${periferico.id})}" method="post" style="display:inline">
                     <button class="btn btn-danger btn-sm" type="submit">🗑️</button>
                 </form>
             </td>
@@ -92,9 +92,10 @@
         </form>
     </div>
 
-    <h3 class="mt-4">Agregar periférico</h3>
+    <h3 class="mt-4" th:text="${nuevoPeriferico.id} == null ? 'Agregar periférico' : 'Editar periférico'">Agregar periférico</h3>
     <div style="max-width: 500px">
         <form th:action="@{/equipos/{id}/perifericos(id=${equipo.id})}" th:object="${nuevoPeriferico}" method="post">
+            <input type="hidden" th:field="*{id}">
             <div class="mb-3">
                 <label class="form-label">Tipo</label>
                 <input type="text" class="form-control" th:field="*{tipo}" placeholder="Mouse, Teclado, Monitor...">
@@ -108,6 +109,7 @@
                 <input type="text" class="form-control" th:field="*{serial}">
             </div>
             <button type="submit" class="btn btn-success">💾 Guardar</button>
+            <a class="btn btn-secondary" th:if="${nuevoPeriferico.id} != null" th:href="@{/equipos/{id}(id=${equipo.id})}">Cancelar</a>
         </form>
     </div>
     <p class="mt-4"><a class="btn btn-danger" th:href="@{/equipos/{id}/acta(id=${equipo.id})}">📄 Generar acta de entrega</a></p>
