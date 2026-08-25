@@ -19,22 +19,6 @@ public class SeguridadConfig {
     public PasswordEncoder codificador() {
         return new BCryptPasswordEncoder();
     }
-
-    @Bean
-    public UserDetailsService usuarios(PasswordEncoder codificador) {
-        UserDetails admin = User.withUsername("admin")
-                .password(codificador.encode("12345"))
-                .roles("ADMIN")
-                .build();
-
-        UserDetails consulta = User.withUsername("consulta")
-                .password(codificador.encode("consulta"))
-                .roles("CONSULTA")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, consulta);
-    }
-
     @Bean
     public SecurityFilterChain reglas(HttpSecurity http) throws Exception {
         http
