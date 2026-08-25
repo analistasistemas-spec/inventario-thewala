@@ -10,6 +10,9 @@
 >
 > **📤 FASE 3 COMPLETADA el 25-ago-2026:** acta de entrega en PDF y proyecto publicado en
 > <https://github.com/analistasistemas-spec/inventario-thewala>
+>
+> **📜 FASE 4 COMPLETADA el 25-ago-2026:** historial de movimientos (traslados entre sedes
+> y cambios de responsable).
 
 Vas a construir una página web en **Java** para registrar los computadores y periféricos
 de la IPS, y en el camino vas a aprender las bases del desarrollo web con Java.
@@ -641,9 +644,61 @@ git push
 
 ---
 
-## Fase 4 — Caminos abiertos (por hacer)
+## FASE 4 — Historial de movimientos (25-ago-2026)
 
-- **Historial de movimientos**: traslados entre sedes y cambios de responsable, con fecha.
+### 4.1 — Traslados entre sedes y cambios de responsable ✅
+
+Entidad `Movimiento` con `@ManyToOne Equipo` y los campos del traslado: fecha, sede
+origen y destino, responsable anterior y nuevo, observación. Repositorio con otra
+*derived query*, esta vez con el orden incluido en el nombre:
+
+```java
+List<Movimiento> findByEquipoIdOrderByFechaDesc(Long equipoId);
+```
+
+**Lo importante de este paso es la lógica de negocio**: una sola acción del usuario
+produce DOS efectos coordinados en la base de datos.
+
+```java
+@PostMapping("/equipos/{equipoId}/traslados")
+public String registrarTraslado(@PathVariable Long equipoId, @ModelAttribute Movimiento movimiento) {
+    Equipo equipo = repositorio.findById(equipoId).orElseThrow();
+
+    // 1. El origen NO lo escribe el usuario: se toma de donde esta el equipo ahora
+    movimiento.setEquipo(equipo);
+    movimiento.setSedeOrigen(equipo.getSede());
+    movimiento.setResponsableAnterior(equipo.getResponsable());
+    if (movimiento.getFecha() == null) {
+        movimiento.setFecha(LocalDate.now());
+    }
+    movimientoRepositorio.save(movimiento);
+
+    // 2. Y despues se actualiza el equipo con el destino
+    equipo.setSede(movimiento.getSedeDestino());
+    equipo.setResponsable(movimiento.getResponsableNuevo());
+    repositorio.save(equipo);
+
+    return "redirect:/equipos/" + equipoId;
+}
+```
+
+El orden importa: primero se **fotografía** el estado actual, después se sobrescribe. Así
+el historial no depende de que alguien recuerde de dónde venía el equipo.
+
+En la plantilla aparece un atributo nuevo: **`th:if`**, que pinta un elemento solo si se
+cumple la condición — se usó para la fila "Sin movimientos registrados":
+
+```html
+<tr th:if="${movimientos.isEmpty()}">
+```
+
+Y se repitió el cuidado ya conocido: la variable de ruta se llama `{equipoId}`, nunca
+`{id}`, para que `@ModelAttribute` no la meta en el `id` del movimiento.
+
+---
+
+## Fase 5 — Caminos abiertos (por hacer)
+
 - **Usuarios con roles** (consulta vs administrador) desde la base de datos.
 - **Desplegarlo** en un servidor de la IPS para que lo use todo el mundo.
 - Detalle pendiente: ponerle las tildes a los textos fijos del acta de entrega.
