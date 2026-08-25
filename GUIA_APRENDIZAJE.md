@@ -7,6 +7,9 @@
 > **🚀 FASE 2 COMPLETADA el 13-ago-2026** (ver al final): ficha completa del equipo,
 > listas desplegables, exportación a Excel y PDF, dashboard con totales y menú de
 > navegación con fragmentos.
+>
+> **📤 FASE 3 COMPLETADA el 25-ago-2026:** acta de entrega en PDF y proyecto publicado en
+> <https://github.com/analistasistemas-spec/inventario-thewala>
 
 Vas a construir una página web en **Java** para registrar los computadores y periféricos
 de la IPS, y en el camino vas a aprender las bases del desarrollo web con Java.
@@ -540,13 +543,110 @@ lugar. Es el principio **DRY** (*Don't Repeat Yourself*), uno de los pilares del
 
 ---
 
-## Fase 3 — Caminos abiertos (por hacer)
+## FASE 3 — Documento imprimible y publicación (25-ago-2026)
 
-- **Subirlo a GitHub** — primer repositorio Java propio (ojo: elegir la cuenta correcta).
-- **Acta de entrega en PDF** por equipo, para cuando se asigna un PC a una persona.
+### 3.1 — Acta de entrega en PDF ✅
+
+Un segundo método `generarActa(Equipo, List<Periferico>)` **dentro de la clase
+`PdfExportador` que ya existía**, reutilizando sus colores (`VERDE`, `VERDE_CLARO`) y sus
+métodos auxiliares (`agregar`, `textoDe`). Esa es la ganancia de haber separado métodos
+pequeños: el segundo documento costó la mitad del trabajo.
+
+El acta lleva: título, fecha, párrafo de compromiso, ficha del equipo en tabla de dos
+columnas, tabla de periféricos y dos líneas de firma (ENTREGA / RECIBE). Se descarga
+desde la hoja de vida del equipo con el nombre `acta_<placa>.pdf`.
+
+Elementos nuevos de PDF: `setColspan` (combinar celdas, para el "sin periféricos"),
+`Rectangle.NO_BORDER` (celdas sin borde, para las firmas) y un `Paragraph` compuesto por
+varios `Phrase` con fuentes distintas.
+
+### 3.2 — Publicación en GitHub ✅
+
+El proyecto vive en <https://github.com/analistasistemas-spec/inventario-thewala>.
+
+**Antes de publicar — sacar las claves del código.** En `application.properties`:
+
+```properties
+spring.security.user.password=${INVENTARIO_PASSWORD:12345}
+spring.datasource.password=${DB_PASSWORD:postgres}
+```
+
+Se lee: "usa la variable de entorno `INVENTARIO_PASSWORD`; si no existe, usa este valor
+de desarrollo". La app sigue funcionando igual en la máquina local, pero en un servidor
+real se define la variable y **la clave nunca vive en el repositorio**. Es el mismo
+patrón del `.env` del Reporteador.
+
+**La identidad de los commits.** Cada commit guarda un nombre y un correo que salen de la
+configuración de git. En esta máquina la configuración *global* era de otra persona (de
+quien instaló el equipo), así que los 25 primeros commits salieron a su nombre.
+
+```bash
+git config user.name "Nombre Apellido"      # SIN --global = solo este repositorio
+git config user.email "correo@ejemplo.com"
+```
+
+Para saber cómo está algo configurado:
+
+| Comando | Qué responde |
+|---|---|
+| `git config user.email` | con qué identidad se firmarán los próximos commits |
+| `git config --show-origin user.email` | de qué archivo sale ese valor (global o del repo) |
+| `git shortlog -sne` | quién firma los commits ya hechos |
+| `git remote -v` | a qué cuenta y repositorio de GitHub apunta el proyecto |
+
+**Reescribir la autoría del historial.** El autor de un commit no se edita: se reescribe
+el historial creando commits nuevos con el mismo contenido. Solo es seguro cuando el
+repositorio es propio y nadie más lo ha clonado — que era el caso. Con red de seguridad:
+
+```bash
+git branch respaldo-autoria-original
+git filter-branch -f --env-filter '
+export GIT_AUTHOR_NAME="Nombre Apellido"
+export GIT_AUTHOR_EMAIL="correo@ejemplo.com"
+export GIT_COMMITTER_NAME="Nombre Apellido"
+export GIT_COMMITTER_EMAIL="correo@ejemplo.com"
+' main
+```
+
+Conserva fechas y mensajes; solo cambia el autor. La rama de respaldo sigue apuntando a
+los commits viejos por si hay que devolverse.
+
+**Publicar.** Lo más simple resultó crear el repositorio vacío desde la web
+(github.com/new, **sin** marcar README/gitignore/license, porque el proyecto ya los
+trae) y conectarlo:
+
+```bash
+git remote add origin https://USUARIO@github.com/USUARIO/repositorio.git
+git config --local credential.useHttpPath true
+git push -u origin main
+```
+
+El `credential.useHttpPath true` hace que las credenciales se guarden **por repositorio**
+y no por servidor: así conviven varias cuentas de GitHub en la misma máquina sin
+pisarse. En el push aparece el diálogo de Git Credential Manager → *Sign in with your
+browser* → autorizar con la cuenta dueña del repositorio.
+
+⚠️ **Tropiezo:** `gh auth login` usa el *device flow* — muestra un código de 8 caracteres
+**en la terminal** (no llega por correo) que se pega en github.com/login/device. Y en su
+pregunta *"Authenticate Git with your GitHub credentials?"* conviene responder **No**
+cuando ya hay otra cuenta configurada en la máquina, para no reemplazarla.
+
+**El día a día a partir de ahora:**
+
+```bash
+git add .
+git commit -m "descripcion del cambio"
+git push
+```
+
+---
+
+## Fase 4 — Caminos abiertos (por hacer)
+
+- **Historial de movimientos**: traslados entre sedes y cambios de responsable, con fecha.
 - **Usuarios con roles** (consulta vs administrador) desde la base de datos.
-- **Historial de movimientos**: quién tuvo el equipo antes, traslados entre sedes.
 - **Desplegarlo** en un servidor de la IPS para que lo use todo el mundo.
+- Detalle pendiente: ponerle las tildes a los textos fijos del acta de entrega.
 
 ---
 
