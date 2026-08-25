@@ -51,6 +51,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
+        <!-- Permite usar sec:authorize en las plantillas Thymeleaf -->
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+        </dependency>
 
         <!-- Reinicia la app automaticamente cuando cambias codigo -->
         <dependency>
@@ -68,6 +73,7 @@
             <scope>runtime</scope>
         </dependency>
     </dependencies>
+
 
     <build>
         <plugins>

@@ -12,7 +12,10 @@
 > <https://github.com/analistasistemas-spec/inventario-thewala>
 >
 > **📜 FASE 4 COMPLETADA el 25-ago-2026:** historial de movimientos (traslados entre sedes
-> y cambios de responsable).
+> y cambios de responsable) y edición de periféricos.
+>
+> **🔑 FASE 5 COMPLETADA el 25-ago-2026:** usuarios con roles (administrador y consulta),
+> claves cifradas con BCrypt y permisos por URL.
 
 Vas a construir una página web en **Java** para registrar los computadores y periféricos
 de la IPS, y en el camino vas a aprender las bases del desarrollo web con Java.
@@ -726,9 +729,74 @@ de su `<tr>`): **en Thymeleaf, cada cosa existe solo dentro del elemento que la 
 
 ---
 
-## Fase 5 — Caminos abiertos (por hacer)
+## FASE 5 — Usuarios y roles (25-ago-2026)
 
-- **Usuarios con roles** (consulta vs administrador) desde la base de datos.
+### 5.1 — Dos perfiles: administrador y consulta ✅
+
+Hasta aquí el login era un usuario único definido en `application.properties`. Ahora la
+seguridad se configura en código, con roles y permisos por URL.
+
+**La clase `SeguridadConfig`** define tres cosas mediante `@Bean` — un método marcado así
+entrega un objeto a Spring para que lo administre y se lo preste a quien lo necesite (la
+otra cara de la inyección de dependencias):
+
+1. **El codificador de claves**: `BCryptPasswordEncoder`. Las claves nunca se guardan
+   como texto, sino como un resumen irreversible. Aunque alguien vea la base de datos, no
+   puede deducir la clave. Es obligatorio en cualquier sistema real.
+2. **Los usuarios**: `admin` (rol ADMIN) y `consulta` (rol CONSULTA), por ahora en memoria.
+3. **Las reglas de acceso**:
+
+```java
+http.authorizeHttpRequests(permisos -> permisos
+        .requestMatchers("/logout").authenticated()
+        .requestMatchers("/equipos/nuevo", "/equipos/*/editar").hasRole("ADMIN")
+        .requestMatchers(HttpMethod.POST, "/**").hasRole("ADMIN")
+        .anyRequest().authenticated())
+    .formLogin(login -> login.defaultSuccessUrl("/", true))
+    .logout(salida -> salida.logoutSuccessUrl("/"));
+```
+
+Se leen así: *crear y editar equipos es solo de ADMIN; cualquier envío de formulario
+(POST) es solo de ADMIN; lo demás basta con estar autenticado*. **Las reglas se evalúan en
+orden y gana la primera que coincide** — por eso `/logout` va primero (si no, la regla de
+los POST impediría cerrar sesión al usuario de consulta) y `anyRequest()` va de último.
+
+Al definir esta configuración, las propiedades `spring.security.user.*` dejan de usarse
+(se borraron) y la autenticación básica desaparece: ahora solo hay formulario de login.
+
+**Ocultar botones según el rol** — dependencia `thymeleaf-extras-springsecurity6`, el
+espacio de nombres en la etiqueta `<html>`:
+
+```html
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+```
+
+y el atributo en cada elemento restringido:
+
+```html
+<a sec:authorize="hasRole('ADMIN')" class="btn btn-warning btn-sm" ...>✏️ Editar</a>
+```
+
+Si el usuario no tiene el rol, el elemento **ni siquiera se envía** al navegador. También
+`sec:authentication="name"` para mostrar quién está conectado en el menú.
+
+⚠️ **Lo más importante de este paso:** ocultar botones es **cosmética**. La seguridad real
+son las reglas del servidor. Prueba de fondo: entrando como `consulta`, escribir a mano
+`/equipos/nuevo` debe dar **403 Forbidden** aunque el botón no se vea. Por eso se
+configuran las dos capas.
+
+⚠️ **Tropiezos:** la dirección del `xmlns:sec` debe ser exactamente
+`http://www.thymeleaf.org/extras/spring-security` (con otra, los atributos `sec:` se
+ignoran en silencio); y el `<span>` del usuario conectado se pegó por error *dentro* de la
+etiqueta `<nav>`, rompiéndola — dentro de una etiqueta de apertura solo caben atributos,
+el contenido visible va después del `>`.
+
+---
+
+## Fase 6 — Caminos abiertos (por hacer)
+
+- **Usuarios en la base de datos** (entidad Usuario + `UserDetailsService` propio), para
+  crear y quitar usuarios sin tocar el código.
 - **Desplegarlo** en un servidor de la IPS para que lo use todo el mundo.
 - Detalle pendiente: ponerle las tildes a los textos fijos del acta de entrega.
 

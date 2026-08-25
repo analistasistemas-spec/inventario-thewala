@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <body>
 
 <nav th:fragment="menu" class="navbar navbar-expand navbar-dark bg-success mb-4">
@@ -10,7 +11,8 @@
             <a class="nav-link" th:href="@{/equipos}">Equipos</a>
             <a class="nav-link" th:href="@{/equipos/nuevo}">Registrar</a>
         </div>
-        <form class="ms-auto" th:action="@{/logout}" method="post">
+        <span class="navbar-text text-white ms-auto me-3">👤 <span sec:authentication="name"></span></span>
+        <form th:action="@{/logout}" method="post">
             <button class="btn btn-outline-light btn-sm" type="submit">Salir</button>
         </form>
     </div>

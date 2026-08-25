@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Equipos</title>
@@ -37,15 +37,15 @@
             <td th:text="${equipo.tipo}"></td>
             <td th:text="${equipo.estado}"></td>
             <td>
-                <a class="btn btn-warning btn-sm" th:href="@{/equipos/{id}/editar(id=${equipo.id})}">✏️ Editar</a>
-                <form th:action="@{/equipos/{id}/eliminar(id=${equipo.id})}" method="post" style="display:inline">
+                <a sec:authorize="hasRole('ADMIN')" class="btn btn-warning btn-sm" th:href="@{/equipos/{id}/editar(id=${equipo.id})}">✏️ Editar</a>
+                <form sec:authorize="hasRole('ADMIN')" th:action="@{/equipos/{id}/eliminar(id=${equipo.id})}" method="post" style="display:inline">
                     <button class="btn btn-danger btn-sm" type="submit">🗑️ Eliminar</button>
                 </form>
             </td>
         </tr>
         </tbody>
     </table>
-    <a class="btn btn-primary" th:href="@{/equipos/nuevo}">➕ Registrar nuevo equipo</a>
+    <a sec:authorize="hasRole('ADMIN')" class="btn btn-primary" th:href="@{/equipos/nuevo}">➕ Registrar nuevo equipo</a>
     <a class="btn btn-success" th:href="@{/equipos/excel(texto=${texto})}">📊 Exportar a Excel</a>
     <a class="btn btn-danger" th:href="@{/equipos/pdf(texto=${texto})}">📄 Exportar a PDF</a>
 </div>
