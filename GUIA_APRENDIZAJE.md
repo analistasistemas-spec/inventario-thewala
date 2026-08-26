@@ -19,6 +19,9 @@
 >
 > **🗄️ FASE 6 COMPLETADA el 25-ago-2026:** usuarios guardados en la base de datos y
 > pantalla para administrarlos desde la web.
+>
+> **🛡️ FASE 7 COMPLETADA el 25-ago-2026:** protecciones de la administración de usuarios y
+> cambio de clave. **El proyecto queda funcionalmente terminado.**
 
 Vas a construir una página web en **Java** para registrar los computadores y periféricos
 de la IPS, y en el camino vas a aprender las bases del desarrollo web con Java.
@@ -867,11 +870,69 @@ Cómo se diagnosticó: enviando el formulario campo por campo hasta ver cuál di
 
 ---
 
-## Fase 7 — Caminos abiertos (por hacer)
+## FASE 7 — Proteger la administración de usuarios (25-ago-2026)
 
-- **Validaciones de negocio en usuarios**: impedir que un administrador se elimine a sí
-  mismo o borre al último ADMIN (hoy nada lo impide y podrías quedarte fuera).
-- **Cambiar la clave** de un usuario existente desde la pantalla.
+### 7.1 — Validaciones de negocio y cambio de clave ✅
+
+El sistema tenía un agujero peligroso: un administrador podía eliminarse a sí mismo o
+borrar al último ADMIN y **dejar a todo el mundo fuera**. Se cerró con dos validaciones,
+más la posibilidad de cambiar claves.
+
+**Tres conceptos nuevos:**
+
+- **`Principal conectado`** como parámetro del método: Spring entrega quién está usando el
+  sistema en ese momento; `conectado.getName()` es su nombre de usuario.
+- **`RedirectAttributes` (mensajes flash)**: al hacer `redirect:` el modelo normal se
+  pierde, porque es una petición nueva. Los *flash attributes* sobreviven exactamente un
+  redirect y luego desaparecen solos — es la forma correcta de decir "guardado" o "no se
+  pudo".
+- **`stream().filter(...).count()`**: la forma moderna de recorrer una lista en Java. Se
+  lee casi como español: *de todos los usuarios, quédate con los ADMIN activos y cuéntalos*.
+
+```java
+private boolean esUltimoAdministrador(Usuario usuario) {
+    if (!"ADMIN".equals(usuario.getRol())) {
+        return false;
+    }
+    long administradoresActivos = repositorio.findAll().stream()
+            .filter(u -> "ADMIN".equals(u.getRol()) && u.isActivo())
+            .count();
+    return administradoresActivos <= 1;
+}
+```
+
+**Cambiar la clave sin exponerla:** el formulario de edición llega con el campo de clave
+**vacío** (nunca se muestra ni el hash), y al guardar:
+
+- si el campo va vacío → se conserva la clave que ya estaba,
+- si trae texto → se cifra y se reemplaza,
+- si es un usuario nuevo → la clave es obligatoria.
+
+**Un cuidado importante:** para llenar el formulario de edición NO se le vacía la clave a
+la entidad que viene de la base de datos, sino que se crea una **copia limpia**. Mutar una
+entidad solo para mostrarla es arriesgado: JPA podría detectar el cambio y guardarlo.
+
+```java
+Usuario formulario = new Usuario();
+formulario.setId(existente.getId());
+formulario.setUsuario(existente.getUsuario());
+formulario.setRol(existente.getRol());
+formulario.setActivo(existente.isActivo());
+// la clave se deja vacia a proposito
+```
+
+Con esto el proyecto queda **funcionalmente terminado**: inventario, periféricos,
+movimientos, reportes, documentos, usuarios y permisos.
+
+---
+
+## Fase 8 — Lo que queda (opcional)
+
+- **Desplegarlo en un servidor** de la IPS para que lo use todo el mundo: empaquetar en
+  `.jar`, instalar PostgreSQL en el servidor, definir las variables de entorno y dejarlo
+  arrancando como servicio. Ya no es programar: es infraestructura.
+- Ideas que pueden surgir usándolo: mantenimientos programados, alertas de garantías por
+  vencer, fotos de los equipos, reportes por sede.
 - **Desplegarlo** en un servidor de la IPS para que lo use todo el mundo.
 - Detalle pendiente: ponerle las tildes a los textos fijos del acta de entrega.
 
