@@ -926,14 +926,140 @@ movimientos, reportes, documentos, usuarios y permisos.
 
 ---
 
-## Fase 8 — Lo que queda (opcional)
+## FASE 8 — Identidad visual propia (27-ago-2026)
+
+Hasta aquí la aplicación se veía como *cualquier* aplicación hecha con Bootstrap. En esta
+fase pasó a tener cara propia: colores de la IPS, tarjetas, badges de estado y un pie de
+página, sin dejar de usar Bootstrap por debajo.
+
+### 8.1 — Una hoja de estilos propia ✅
+
+Se creó `src/main/resources/static/css/estilos.css`.
+
+**Recordatorio de dónde va cada cosa** (ya se vivió al borrar `static/index.html` en la
+Fase 2): en `templates/` van las páginas que Thymeleaf procesa; en `static/` van los
+archivos que el navegador pide tal cual — CSS, imágenes, JavaScript.
+
+**El concepto nuevo son las variables CSS.** En vez de repetir el verde institucional en
+treinta lugares, se declara una vez arriba del archivo y se usa por nombre:
+
+```css
+:root {
+    --verde: #198754;
+    --verde-oscuro: #146c43;
+    --fondo: #f4f6f8;
+    --radio: 10px;
+}
+
+body {
+    background-color: var(--fondo);
+}
+```
+
+Cambiando el valor de `--verde` cambia el color de **toda** la aplicación: la barra de
+navegación, los encabezados de las tablas, los botones. Es la misma idea de no repetirse
+que ya se aplicó con los fragmentos, pero en el CSS.
+
+**Un detalle que importa: el orden.** Primero se enlaza Bootstrap y *después*
+`estilos.css`. En CSS, cuando dos reglas compiten, gana la última que se cargó — por eso
+la hoja propia puede corregir lo que trae Bootstrap.
+
+### 8.2 — Head y pie compartidos: fragmentos con parámetro ✅
+
+En la Fase 2 el menú ya era un fragmento. Ahora también lo son el `<head>` y el pie de
+página, y aquí aparece algo nuevo: **un fragmento que recibe un dato**.
+
+```html
+<!-- en fragmentos.html -->
+<head th:fragment="cabeza(titulo)">
+    <title th:text="${titulo} + ' | Inventario The Wala'">Inventario The Wala</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+```
+
+```html
+<!-- en cada pagina -->
+<head th:replace="~{fragmentos :: cabeza('Equipos')}"></head>
+...
+<footer th:replace="~{fragmentos :: pie}"></footer>
+```
+
+`cabeza(titulo)` funciona como un método: se le pasa el título de la página y el fragmento
+lo usa donde lo necesita. Así cada pantalla tiene su propio título en la pestaña del
+navegador, pero las hojas de estilo se declaran **una sola vez**. El día que se agregue
+otra librería, se toca un archivo y no seis.
+
+Fíjese además en `th:href="@{/css/estilos.css}"`: la arroba construye la ruta desde la
+raíz de la aplicación. Nunca escriba rutas a mano tipo `../css/estilos.css`.
+
+### 8.3 — Badges de estado de colores con `th:classappend` ✅
+
+En el listado, el estado del equipo dejó de ser texto plano y pasó a ser una etiqueta de
+color: verde si está activo, amarillo en mantenimiento, gris si está dado de baja.
+
+```html
+<span class="estado"
+      th:classappend="${equipo.estado == 'Activo'} ? 'estado-activo' : (${equipo.estado == 'Mantenimiento'} ? 'estado-mantenimiento' : 'estado-neutro')"
+      th:text="${equipo.estado}"></span>
+```
+
+**La diferencia clave:** `th:class` **reemplaza** todas las clases del elemento;
+`th:classappend` **suma** una clase a las que ya tiene. Aquí se necesita sumar, porque la
+clase `estado` (la forma de la píldora) debe conservarse siempre y solo cambia el color.
+
+Lo que va después del `?` es un **operador ternario**: *si la condición se cumple, este
+valor; si no, el otro*. Se pueden encadenar, como en el ejemplo, pero encadenar más de dos
+o tres se vuelve ilegible.
+
+### 8.4 — La lección más cara del proyecto: cada pantalla es una tripleta ⚠️
+
+Durante esta fase la guía mostraba una tabla con dos columnas, **Plantilla** y **Título**,
+para saber qué título ponerle a cada página. Se entendió como que había que renombrar los
+*archivos*: `equipo_detalle.html` pasó a `Hoja_de_vida.html`, `equipo_formulario.html` a
+`Registrar_equipo.html`, y así con las seis. Como los `return` de los controladores
+también se cambiaron, el resultado fueron **cuatro pantallas devolviendo error 500**.
+
+**Por qué se rompe.** Cada pantalla de la aplicación es una tripleta amarrada por nombres:
+
+| Pieza | Ejemplo |
+|---|---|
+| Lo que devuelve el controlador | `return "equipo_formulario";` |
+| El archivo de la plantilla | `templates/equipo_formulario.html` |
+| Los datos que la plantilla espera | `model.addAttribute("equipo", ...)` y `th:object="${equipo}"` |
+
+Si se cambia un lado sin cambiar los otros dos, Spring busca una plantilla que no existe
+(500), o la plantilla pide un dato que nadie puso en el modelo (`null`). El nombre del
+archivo **no** es el título que ve el usuario: el título se pone con el fragmento
+`cabeza('...')` de la sección 8.2.
+
+**Cómo se recuperó:** se devolvieron los archivos a sus nombres originales con `git mv`
+—que renombra y le avisa a git en un solo paso— y se restauraron los nueve `return` de los
+controladores. Lección práctica: tener el trabajo en git convirtió un desastre en un rato
+de trabajo.
+
+**Dos gotchas menores de la misma jornada:**
+
+- `th:replace="~{fragmentos :: cabeza('Registrar equipo'')}"` — una comilla de más rompe
+  toda la página con un error de parseo que no dice "sobra una comilla".
+- Editando plantillas desde PowerShell, `Set-Content -Encoding UTF8` agrega un carácter
+  invisible al inicio del archivo (BOM) y Java falla con `illegal character: '﻿'`. Para
+  archivos de código, escribirlos desde IntelliJ o con
+  `[System.IO.File]::WriteAllText(ruta, texto, [System.Text.UTF8Encoding]::new($false))`.
+
+**La regla para llevarse:** renombrar un archivo del proyecto nunca es un cambio cosmético.
+Si quiere cambiar lo que *ve* el usuario, cambie el texto de la página o el título del
+fragmento; el nombre del archivo se deja quieto.
+
+---
+
+## Lo que queda (opcional)
 
 - **Desplegarlo en un servidor** de la IPS para que lo use todo el mundo: empaquetar en
   `.jar`, instalar PostgreSQL en el servidor, definir las variables de entorno y dejarlo
   arrancando como servicio. Ya no es programar: es infraestructura.
 - Ideas que pueden surgir usándolo: mantenimientos programados, alertas de garantías por
   vencer, fotos de los equipos, reportes por sede.
-- **Desplegarlo** en un servidor de la IPS para que lo use todo el mundo.
 - Detalle pendiente: ponerle las tildes a los textos fijos del acta de entrega.
 
 ---
